@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LegalFill - AI Document Assistant</title>
+  <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .gradient-bg { background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%); }
+    .glass-effect { 
+      background: rgba(248, 250, 252, 0.95);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(203, 213, 225, 0.3);
+      color: #1e293b;
+    }
+    .glass-dark { 
+      background: rgba(30, 41, 59, 0.8);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      color: #f8fafc;
+    }
+    .animate-float {
+      animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+    .animate-pulse-slow {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    .glow-on-hover {
+      transition: all 0.3s ease-in-out;
+    }
+    .glow-on-hover:hover {
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+      transform: translateY(-2px);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      transition: all 0.3s ease;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+    }
+    .drag-over {
+      border-color: #3b82f6 !important;
+      background-color: rgba(59, 130, 246, 0.1) !important;
+    }
+    .file-name-truncate {
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      display: inline-block;
+    }
+    .progress-bar {
+      background: linear-gradient(90deg, #3b82f6 0%, #06b6d4 100%);
+      transition: width 0.3s ease;
+    }
+  </style>
+</head>
+<body class="gradient-bg min-h-screen">
+  <!-- Navigation Header -->
+  <nav class="glass-dark sticky top-0 z-50 px-6 py-4">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+          <i class="fas fa-file-signature text-white text-lg"></i>
+        </div>
+        <h1 class="text-white font-bold text-xl">LegalFill AI</h1>
+      </div>
+      <div class="hidden md:flex items-center space-x-6 text-white/80">
+        <span class="text-sm">AI-Powered Document Assistant</span>
+        <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="min-h-screen py-12 px-4">
+    <main class="max-w-4xl mx-auto">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <!-- Background Elements -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden">
+    <div class="absolute top-1/4 left-1/4 w-32 h-32 bg-white/10 rounded-full blur-xl animate-float"></div>
+    <div class="absolute top-3/4 right-1/4 w-48 h-48 bg-purple-500/10 rounded-full blur-2xl animate-float" style="animation-delay: 1s;"></div>
+    <div class="absolute bottom-1/4 left-1/2 w-24 h-24 bg-blue-500/10 rounded-full blur-xl animate-float" style="animation-delay: 2s;"></div>
+  </div>
+</body>
+</html>

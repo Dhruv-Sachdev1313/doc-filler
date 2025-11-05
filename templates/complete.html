@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-2xl mx-auto text-center">
+  <!-- Success Animation -->
+  <div class="mb-8">
+    <div class="inline-block p-8 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full mb-6 animate-bounce">
+      <i class="fas fa-check text-4xl text-white"></i>
+    </div>
+    <h1 class="text-4xl font-bold text-white mb-4">
+      🎉 Document Complete!
+    </h1>
+    <p class="text-xl text-slate-200 mb-8">
+      All placeholders have been filled successfully. Your document is ready for download.
+    </p>
+  </div>
+
+  <!-- Download Card -->
+  <div class="glass-effect rounded-3xl p-8 mb-8 glow-on-hover">
+    <div class="mb-6">
+      <div class="w-16 h-16 bg-blue-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+        <i class="fas fa-file-download text-blue-500 text-2xl"></i>
+      </div>
+      <h2 class="text-2xl font-semibold text-slate-800 mb-2">Ready for Download</h2>
+      <p class="text-slate-600">Your filled document with preserved formatting</p>
+    </div>
+
+    <a href="/download" class="inline-block w-full btn-primary font-semibold py-4 px-8 rounded-xl no-underline">
+      <div class="flex items-center justify-center space-x-3">
+        <i class="fas fa-download text-xl"></i>
+        <span class="text-lg">Download Completed Document</span>
+      </div>
+    </a>
+
+    <div class="mt-6 grid grid-cols-3 gap-4 text-center">
+      <div class="bg-slate-200/50 rounded-lg p-3">
+        <i class="fas fa-shield-check text-green-600 mb-2 block text-lg"></i>
+        <span class="text-slate-700 text-sm font-medium">Secure</span>
+      </div>
+      <div class="bg-slate-200/50 rounded-lg p-3">
+        <i class="fas fa-palette text-purple-600 mb-2 block text-lg"></i>
+        <span class="text-slate-700 text-sm font-medium">Formatted</span>
+      </div>
+      <div class="bg-slate-200/50 rounded-lg p-3">
+        <i class="fas fa-lightning-bolt text-yellow-600 mb-2 block text-lg"></i>
+        <span class="text-slate-700 text-sm font-medium">Instant</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="flex flex-col sm:flex-row gap-4 justify-center">
+    <a href="/" class="glass-dark text-white font-medium py-3 px-6 rounded-xl hover:bg-slate-700/60 transition-all duration-300 no-underline flex items-center justify-center space-x-2">
+      <i class="fas fa-plus"></i>
+      <span>Fill Another Document</span>
+    </a>
+    
+    <button onclick="window.print()" class="glass-dark text-white font-medium py-3 px-6 rounded-xl hover:bg-slate-700/60 transition-all duration-300 flex items-center justify-center space-x-2">
+      <i class="fas fa-print"></i>
+      <span>Print Summary</span>
+    </button>
+  </div>
+
+  <!-- Summary Card -->
+  <div class="glass-effect rounded-2xl p-6 mt-8 text-left">
+    <h3 class="text-slate-800 font-semibold mb-4 flex items-center">
+      <i class="fas fa-clipboard-list mr-2 text-blue-500"></i>
+      Session Summary
+    </h3>
+    <div class="space-y-3 text-sm">
+      <div class="flex justify-between items-center">
+        <span class="text-slate-600">Document:</span>
+        <span class="text-slate-800 font-medium file-name-truncate">{{ filename or "Unknown" }}</span>
+      </div>
+      <div class="flex justify-between items-center">
+        <span class="text-slate-600">Fields Completed:</span>
+        <span class="text-slate-800 font-medium">{{ total_fields or "0" }}</span>
+      </div>
+      <div class="flex justify-between items-center">
+        <span class="text-slate-600">Processing Time:</span>
+        <span class="text-slate-800 font-medium">{{ processing_time or "Unknown" }}</span>
+      </div>
+      <div class="flex justify-between items-center">
+        <span class="text-slate-600">Status:</span>
+        <span class="text-green-600 font-medium flex items-center">
+          <i class="fas fa-check-circle mr-1"></i>
+          Complete
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Add some celebration effects
+document.addEventListener('DOMContentLoaded', function() {
+  // Create confetti effect
+  function createConfetti() {
+    const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe'];
+    for (let i = 0; i < 50; i++) {
+      const confetti = document.createElement('div');
+      confetti.style.cssText = `
+        position: fixed;
+        top: -10px;
+        left: ${Math.random() * 100}%;
+        width: 10px;
+        height: 10px;
+        background: ${colors[Math.floor(Math.random() * colors.length)]};
+        animation: confetti-fall 3s linear forwards;
+        z-index: 1000;
+      `;
+      document.body.appendChild(confetti);
+      
+      setTimeout(() => confetti.remove(), 3000);
+    }
+  }
+  
+  // Add confetti animation styles
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes confetti-fall {
+      0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
+  `;
+  document.head.appendChild(style);
+  
+  // Trigger confetti
+  setTimeout(createConfetti, 500);
+});
+</script>
+{% endblock %}

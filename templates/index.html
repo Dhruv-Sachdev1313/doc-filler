@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="text-center mb-12">
+  <div class="inline-block p-4 bg-blue-500/20 rounded-full mb-6 animate-float">
+    <i class="fas fa-robot text-4xl text-blue-400"></i>
+  </div>
+  <h1 class="text-4xl sm:text-5xl font-bold text-white mb-4 leading-tight">
+    Transform Your <span class="bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">Documents</span>
+  </h1>
+  <p class="text-lg sm:text-xl text-slate-200 mb-8 max-w-2xl mx-auto">
+    Upload your document and let our AI assistant help you fill placeholders intelligently and efficiently
+  </p>
+</div>
+
+<div class="glass-effect rounded-3xl p-8 max-w-2xl mx-auto glow-on-hover">
+  <div class="mb-8">
+    <h2 class="text-2xl font-semibold text-slate-800 mb-2 flex items-center">
+      <i class="fas fa-upload mr-3 text-blue-500"></i>
+      Upload Your Document
+    </h2>
+    <p class="text-slate-600">Select a .docx file to get started</p>
+  </div>
+
+  <form hx-post="/upload" hx-target="#result" hx-swap="innerHTML" enctype="multipart/form-data" class="space-y-6">
+    <!-- Custom File Upload -->
+    <div class="relative">
+      <input type="file" name="file" accept=".docx" required id="file-input" class="hidden">
+      <label for="file-input" id="drop-zone" class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer hover:border-blue-500 hover:bg-blue-50/20 transition-all duration-300 group bg-slate-50/10">
+        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+          <i class="fas fa-cloud-upload-alt text-3xl text-slate-600 group-hover:text-blue-500 transition-colors mb-3"></i>
+          <p class="mb-2 text-sm text-slate-700 group-hover:text-slate-800">
+            <span class="font-semibold">Click to upload</span> or drag and drop
+          </p>
+          <p class="text-xs text-slate-500">DOCX files only</p>
+        </div>
+      </label>
+    </div>
+
+    <!-- File Info Display -->
+    <div id="file-info" class="hidden bg-slate-700/50 rounded-lg p-4 border border-slate-600">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3 min-w-0 flex-1">
+          <i class="fas fa-file-word text-blue-400 text-lg flex-shrink-0"></i>
+          <div class="min-w-0 flex-1">
+            <p class="text-white font-medium file-name-truncate" id="file-name" title=""></p>
+            <p class="text-slate-300 text-sm" id="file-size"></p>
+          </div>
+        </div>
+        <i class="fas fa-check-circle text-green-400 flex-shrink-0 ml-3"></i>
+      </div>
+    </div>
+
+    <!-- Submit Button -->
+    <button type="submit" class="w-full btn-primary font-semibold py-4 px-6 rounded-xl flex items-center justify-center space-x-3">
+      <i class="fas fa-magic"></i>
+      <span id="submit-text">Analyze Document with AI</span>
+      <div class="hidden" id="loading-spinner">
+        <i class="fas fa-spinner animate-spin"></i>
+      </div>
+    </button>
+  </form>
+
+  <div id="result" class="mt-6"></div>
+</div>
+
+<!-- Features Section -->
+<div class="grid md:grid-cols-3 gap-6 mt-16 max-w-4xl mx-auto">
+  <div class="glass-effect rounded-2xl p-6 text-center">
+    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+      <i class="fas fa-brain text-blue-600 text-xl"></i>
+    </div>
+    <h3 class="text-slate-800 font-semibold mb-2">AI-Powered Analysis</h3>
+    <p class="text-slate-600 text-sm">Smart detection of placeholders and context-aware suggestions</p>
+  </div>
+  
+  <div class="glass-effect rounded-2xl p-6 text-center">
+    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+      <i class="fas fa-shield-alt text-green-600 text-xl"></i>
+    </div>
+    <h3 class="text-slate-800 font-semibold mb-2">Secure & Private</h3>
+    <p class="text-slate-600 text-sm">Your documents are processed securely and never stored permanently</p>
+  </div>
+  
+  <div class="glass-effect rounded-2xl p-6 text-center">
+    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+      <i class="fas fa-lightning-bolt text-purple-600 text-xl"></i>
+    </div>
+    <h3 class="text-slate-800 font-semibold mb-2">Lightning Fast</h3>
+    <p class="text-slate-600 text-sm">Quick processing and instant downloads with preserved formatting</p>
+  </div>
+</div>
+
+<script>
+// File handling function
+function handleFile(file) {
+  const fileInfo = document.getElementById('file-info');
+  const fileName = document.getElementById('file-name');
+  const fileSize = document.getElementById('file-size');
+  
+  if (file && file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+    fileName.textContent = file.name;
+    fileName.title = file.name; // For tooltip on hover
+    fileSize.textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+    fileInfo.classList.remove('hidden');
+    return true;
+  } else {
+    alert('Please select a valid DOCX file.');
+    return false;
+  }
+}
+
+// File input handling
+document.getElementById('file-input').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (file) {
+    handleFile(file);
+  } else {
+    document.getElementById('file-info').classList.add('hidden');
+  }
+});
+
+// Drag and drop functionality
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+  dropZone.addEventListener(eventName, preventDefaults, false);
+  document.body.addEventListener(eventName, preventDefaults, false);
+});
+
+['dragenter', 'dragover'].forEach(eventName => {
+  dropZone.addEventListener(eventName, highlight, false);
+});
+
+['dragleave', 'drop'].forEach(eventName => {
+  dropZone.addEventListener(eventName, unhighlight, false);
+});
+
+dropZone.addEventListener('drop', handleDrop, false);
+
+function preventDefaults(e) {
+  e.preventDefault();
+  e.stopPropagation();
+}
+
+function highlight() {
+  dropZone.classList.add('drag-over');
+}
+
+function unhighlight() {
+  dropZone.classList.remove('drag-over');
+}
+
+function handleDrop(e) {
+  const dt = e.dataTransfer;
+  const files = dt.files;
+  
+  if (files.length > 0) {
+    const file = files[0];
+    if (handleFile(file)) {
+      // Set the file to the input element
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(file);
+      fileInput.files = dataTransfer.files;
+    }
+  }
+}
+
+// Form submission handling
+document.querySelector('form').addEventListener('submit', function(e) {
+  const fileInput = document.getElementById('file-input');
+  if (!fileInput.files || fileInput.files.length === 0) {
+    e.preventDefault();
+    alert('Please select a file first.');
+    return;
+  }
+  
+  const loadingSpinner = document.getElementById('loading-spinner');
+  const submitText = document.getElementById('submit-text');
+  const submitBtn = this.querySelector('button[type="submit"]');
+  
+  loadingSpinner.classList.remove('hidden');
+  submitText.textContent = 'Processing...';
+  submitBtn.disabled = true;
+});
+</script>
+{% endblock %}
