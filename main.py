@@ -18,7 +18,7 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-# In-memory state (you can use Redis/session later)
+# In-memory state
 SESSION = {}
 
 # Debug endpoint to check session state (remove in production)
