@@ -15,7 +15,6 @@ genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 print(os.getenv("GEMINI_API_KEY"))
 
 app = FastAPI()
-app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 # In-memory state
