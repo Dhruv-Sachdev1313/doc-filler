@@ -6,7 +6,6 @@ from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from docx import Document
-# from openai import OpenAI
 from dotenv import load_dotenv
 
 import google.generativeai as genai
@@ -14,8 +13,6 @@ import google.generativeai as genai
 load_dotenv()
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 print(os.getenv("GEMINI_API_KEY"))
-
-# client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")

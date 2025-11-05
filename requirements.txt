@@ -3,7 +3,6 @@ uvicorn
 python-docx
 jinja2
 python-multipart
-openai
 htmx
 python-dotenv
 google-generativeai
