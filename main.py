@@ -12,7 +12,6 @@ import google.generativeai as genai
 
 load_dotenv()
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-print(os.getenv("GEMINI_API_KEY"))
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
@@ -81,7 +80,6 @@ Snippets:
     try:
         model = genai.GenerativeModel("gemini-2.0-flash")
         response = model.generate_content(prompt)
-        print(response.text)
         
         import json
         data = json.loads(response.text.removeprefix("```json").removesuffix("```").strip())
