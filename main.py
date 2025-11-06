@@ -2,7 +2,7 @@ import io
 import os
 import re
 from fastapi import FastAPI, Form, Request, UploadFile
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, StreamingResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from docx import Document
@@ -174,6 +174,25 @@ async def upload(request: Request, file: UploadFile):
     SESSION["answers"] = {}
     SESSION["file_name"] = file.filename
 
+    # Return analysis result instead of going directly to chat
+    filename_display = file.filename[:30] + "..." if len(file.filename) > 30 else file.filename
+    
+    return templates.TemplateResponse(
+        "analysis.html",
+        {
+            "request": request,
+            "total_placeholders": len(details),
+            "filename_display": filename_display,
+        },
+    )
+
+
+@app.get("/chat", response_class=HTMLResponse)
+async def start_chat(request: Request):
+    if "placeholders" not in SESSION:
+        return RedirectResponse(url="/", status_code=302)
+    
+    details = SESSION["placeholders"]
     first_q = details[0]["question"] if details else "No placeholders found."
     total_questions = len(details)
     progress_percentage = round((0 + 1) / total_questions * 100, 1) if total_questions > 0 else 0
@@ -203,18 +222,92 @@ async def fill(
     if index < len(details):
         next_q = details[index]["question"]
         total_questions = len(details)
-        progress_percentage = round((index + 1) / total_questions * 100, 1)
         
-        return templates.TemplateResponse(
-            "chat.html",
-            {
-                "request": request, 
-                "index": index, 
-                "question": next_q, 
-                "total_questions": total_questions,
-                "progress_percentage": progress_percentage,
-                "show_confirmation": True
-            }
+        # Return just the chat content with confirmation - wrapped in space-y-6 div
+        return HTMLResponse(
+            content=f"""<div class="space-y-6">
+            <!-- Previous Answer Confirmation -->
+            <div class="flex items-start space-x-4 mb-6 chat-bubble">
+              <div class="flex-shrink-0 w-10 h-10 bg-gradient-to-r from-green-500 to-teal-600 rounded-full flex items-center justify-center">
+                <i class="fas fa-check text-white"></i>
+              </div>
+              <div class="flex-1">
+                <div class="bg-green-100 border border-green-200 rounded-2xl rounded-bl-sm p-4 shadow-sm">
+                  <p class="text-green-800">✅ Got it! Your answer has been saved.</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Next Question -->
+            <div class="flex items-start space-x-4">
+              <div class="flex-shrink-0 w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                <i class="fas fa-robot text-white"></i>
+              </div>
+              <div class="flex-1">
+                <div class="bg-slate-100 rounded-2xl rounded-tl-sm p-6 border border-slate-200 shadow-lg">
+                  <div class="mb-4">
+                    <div class="flex items-center justify-between mb-3">
+                      <span class="text-slate-600 text-sm font-medium">AI Assistant</span>
+                      <span class="text-blue-600 text-sm font-semibold">{index + 1}/{len(details)}</span>
+                    </div>
+                    <p class="text-slate-800 text-lg leading-relaxed font-medium">{next_q}</p>
+                  </div>
+                  <div class="flex items-center text-slate-500 text-sm">
+                    <i class="fas fa-lightbulb mr-2"></i>
+                    <span>Provide the most accurate information possible</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- User Input Form -->
+            <form hx-post="/fill" hx-target="#chat-box" hx-swap="innerHTML" class="flex items-end space-x-4 mt-6">
+              <div class="flex-shrink-0 w-10 h-10 bg-gradient-to-r from-green-500 to-teal-600 rounded-full flex items-center justify-center">
+                <i class="fas fa-user text-white"></i>
+              </div>
+              <div class="flex-1">
+                <div class="bg-white rounded-2xl rounded-bl-sm p-4 border border-slate-200 shadow-lg">
+                  <textarea 
+                    name="answer" 
+                    placeholder="Type your answer here..." 
+                    class="w-full bg-transparent text-slate-800 placeholder-slate-500 resize-none focus:outline-none text-lg answer-textarea"
+                    rows="3"
+                    required
+                  ></textarea>
+                  <input type="hidden" name="index" value="{index}" />
+                  <div class="flex items-center justify-between mt-4">
+                    <div class="flex items-center text-slate-500 text-sm">
+                      <i class="fas fa-info-circle mr-2"></i>
+                      <span>Press Enter to send, Shift+Enter for new line</span>
+                    </div>
+                    <button type="submit" class="btn-primary font-semibold py-3 px-6 rounded-xl flex items-center space-x-2">
+                      <span>Send</span>
+                      <i class="fas fa-paper-plane"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </form>
+            
+            <!-- Simple Progress Info inside chat-box so it gets updated -->
+            <div class="glass-effect rounded-2xl p-4 text-center mt-6">
+              <div class="flex items-center justify-center space-x-2 text-slate-600">
+                <i class="fas fa-clipboard-list text-blue-500"></i>
+                <span class="text-sm">Question {index + 1} of {total_questions}</span>
+                <span class="text-xs text-slate-400">•</span>
+                <span class="text-sm">Keep going! You're doing great.</span>
+              </div>
+            </div>
+            
+            <script>
+            // Auto-focus on textarea
+            document.addEventListener('DOMContentLoaded', function() {{
+              const textarea = document.querySelector('textarea[name="answer"]');
+              if (textarea) textarea.focus();
+            }});
+            </script>
+            </div>""",
+            headers={"HX-Trigger": "updateProgress"}
         )
     else:
         # All questions completed - render completion page

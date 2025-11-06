@@ -45,11 +45,7 @@
             <div class="mb-4">
               <div class="flex items-center justify-between mb-3">
                 <span class="text-slate-600 text-sm font-medium">AI Assistant</span>
-                <div class="flex space-x-1">
-                  <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
-                  <div class="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 0.1s;"></div>
-                  <div class="w-2 h-2 bg-pink-500 rounded-full animate-bounce" style="animation-delay: 0.2s;"></div>
-                </div>
+                <span class="text-blue-600 text-sm font-semibold">{{ (index + 1) }}/{{ total_questions if total_questions else '?' }}</span>
               </div>
               <p class="text-slate-800 text-lg leading-relaxed font-medium">{{ question }}</p>
             </div>
@@ -62,7 +58,7 @@
       </div>
 
       <!-- User Input Form -->
-      <form hx-post="/fill" hx-target="main" hx-swap="innerHTML" class="flex items-end space-x-4">
+      <form hx-post="/fill" hx-target="#chat-box" hx-swap="innerHTML" class="flex items-end space-x-4">
         <div class="flex-shrink-0 w-10 h-10 bg-gradient-to-r from-green-500 to-teal-600 rounded-full flex items-center justify-center">
           <i class="fas fa-user text-white"></i>
         </div>
@@ -71,10 +67,9 @@
             <textarea 
               name="answer" 
               placeholder="Type your answer here..." 
-              class="w-full bg-transparent text-slate-800 placeholder-slate-500 resize-none focus:outline-none text-lg"
+              class="w-full bg-transparent text-slate-800 placeholder-slate-500 resize-none focus:outline-none text-lg answer-textarea"
               rows="3"
               required
-              onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); this.form.submit(); }"
             ></textarea>
             <input type="hidden" name="index" value="{{ index }}" />
             <div class="flex items-center justify-between mt-4">
@@ -90,30 +85,17 @@
           </div>
         </div>
       </form>
+      
+      <!-- Simple Progress Info inside chat-box so it gets updated -->
+      <div class="glass-effect rounded-2xl p-4 text-center mt-6">
+        <div class="flex items-center justify-center space-x-2 text-slate-600">
+          <i class="fas fa-clipboard-list text-blue-500"></i>
+          <span class="text-sm">Question {{ (index + 1) }} of {{ total_questions if total_questions else '?' }}</span>
+          <span class="text-xs text-slate-400">•</span>
+          <span class="text-sm">Keep going! You're doing great.</span>
+        </div>
+      </div>
     </div>
-  </div>
-
-  <!-- Progress Indicator -->
-  <div class="glass-effect rounded-2xl p-6">
-    <div class="flex items-center justify-between mb-3">
-      <h3 class="text-slate-800 font-semibold flex items-center">
-        <i class="fas fa-tasks mr-2 text-blue-500"></i>
-        Progress
-      </h3>
-      <span class="text-slate-600 text-sm">Question {{ index + 1 }} of {{ total_questions if total_questions else '?' }}</span>
-    </div>
-    <div class="w-full bg-slate-300 rounded-full h-3">
-      {% set progress_width = progress_percentage if progress_percentage else ((index + 1) / total_questions * 100)|round(1) if total_questions else 0 %}
-      <div class="progress-bar h-3 rounded-full transition-all duration-500" style="width: {{ progress_width }}%"></div>
-    </div>
-    {% set progress_text = progress_percentage if progress_percentage else ((index + 1) / total_questions * 100)|round(1) if total_questions else 0 %}
-    <p class="text-slate-600 text-sm mt-2">
-      {% if total_questions %}
-        {{ progress_text }}% complete - Keep going! You're doing great.
-      {% else %}
-        Keep going! You're doing great.
-      {% endif %}
-    </p>
   </div>
 </div>
 
@@ -136,23 +118,68 @@
 </style>
 
 <script>
-// Auto-focus on textarea when page loads
-document.addEventListener('DOMContentLoaded', function() {
+// Handle Enter key submission for textareas
+function setupTextareaHandlers() {
   const textarea = document.querySelector('textarea[name="answer"]');
   if (textarea) {
+    // Remove any existing event listeners to prevent duplicates
+    textarea.removeEventListener('keydown', handleEnterKey);
+    // Add the Enter key handler
+    textarea.addEventListener('keydown', handleEnterKey);
     textarea.focus();
+  }
+}
+
+function handleEnterKey(event) {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    const form = this.closest('form');
+    if (form) {
+      // Trigger the form submission
+      const submitButton = form.querySelector('button[type="submit"]');
+      if (submitButton) {
+        submitButton.click();
+      }
+    }
+  }
+}
+
+// Auto-focus on textarea when page loads
+document.addEventListener('DOMContentLoaded', function() {
+  setupTextareaHandlers();
+});
+
+// Handle HTMX events
+document.body.addEventListener('htmx:afterSwap', function(event) {
+  // Re-setup textarea handlers after HTMX swap
+  setupTextareaHandlers();
+  
+  // Smooth scroll to keep the conversation in view
+  const chatBox = document.getElementById('chat-box');
+  if (chatBox) {
+    chatBox.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }
+  
+  // Extract and update the question counter from the AI assistant message
+  const aiCounter = document.querySelector('.text-blue-600.text-sm.font-semibold');
+  const progressInfo = document.querySelector('.glass-effect .text-sm');
+  if (aiCounter && progressInfo) {
+    const counterText = aiCounter.textContent;
+    progressInfo.innerHTML = `Question ${counterText}`;
   }
 });
 
 // Form submission handling
-document.querySelector('form').addEventListener('submit', function() {
-  const button = this.querySelector('button[type="submit"]');
-  const span = button.querySelector('span');
-  const icon = button.querySelector('i');
-  
-  span.textContent = 'Sending...';
-  icon.className = 'fas fa-spinner animate-spin';
-  button.disabled = true;
+document.addEventListener('submit', function(event) {
+  if (event.target.matches('form[hx-post="/fill"]')) {
+    const button = event.target.querySelector('button[type="submit"]');
+    const span = button.querySelector('span');
+    const icon = button.querySelector('i');
+    
+    span.textContent = 'Sending...';
+    icon.className = 'fas fa-spinner animate-spin';
+    button.disabled = true;
+  }
 });
 </script>
 {% endblock %}
